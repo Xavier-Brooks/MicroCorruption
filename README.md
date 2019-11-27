@@ -1,2 +1,2 @@
 # MicroCorruption
-Microcorruption is an online reverse engineering game where users must use various tools, such as live memory, a debugger, and a register view, in order to bypass a simulated embedded lock.
+Microcorruption is an online reverse engineering game where users must try to bypass the security on a simulated embedded lock that utilizes the MSP430 assembly language. The user has acces to various tools such as live memory, a register file, breakpoints, code stepping, and an assembler as a means of finding errors and bugs in the provided code of each level. Each level gets progressively harder and challenges players to learn/understand new reverse engineering techniuques. 
