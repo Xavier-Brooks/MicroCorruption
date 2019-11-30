@@ -24,7 +24,6 @@ Similar to the first level New Orleans I decided to start by investigation the c
 differences from New Orleans(level 1)
 	There is no create_password subroutine 
 	call to unlock_door in main is replaced with the code for the subroutine from the first level at line 4406
-	there is no create_password function 
 
 similarities    
 	With the exceptionof the create password function everything else occurs in the same order
