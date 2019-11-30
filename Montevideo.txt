@@ -1,4 +1,6 @@
-Montevideo is pretty similar to Whitehorese in terms of program Layout and subroutines being called. It is obvious that once again buffer overflow will become useful in bypassing the lock and completing the level, the questionis what effect does the strcpy and memset function have on execution of the program. 
+Montevideo is pretty similar to Whitehorese in terms of program Layout and subroutines being called. It is obvious that once 
+again buffer overflow will become useful in bypassing the lock and completing the level, the questionis what effect does the 
+strcpy and memset function have on execution of the program. 
 
 44f4 <login>
 44f4:  3150 f0ff      add	#0xfff0, sp
@@ -27,11 +29,16 @@ Montevideo is pretty similar to Whitehorese in terms of program Layout and subro
 4544:  3150 1000      add	#0x10, sp
 4548:  3041           ret
 
-By setting breakpoints immediately after the strcpy and memset function and using the Test inpt "AAAAAAAA" I found that my input that was initially stored at address 0x2400 is copied to new address 43ee and the memset function clears the inital addresses used to house the password when I initially typed them. Once again getsn allows for 48 bytes of user input giving us control of the addresses be43ee and 441e inclusive. prior to return from login the stack pointer has value 43fe, thus I overwrote this address with the value 43ee such that PC would execute my injected code from input.
+By setting breakpoints immediately after the strcpy and memset function and using the Test inpt "AAAAAAAA" I found that my input 
+that was initially stored at address 0x2400 is copied to new address 43ee and the memset function clears the inital addresses 
+used to house the password when I initially typed them. Once again getsn allows for 48 bytes of user input giving us control of 
+the addresses be43ee and 441e inclusive. prior to return from login the stack pointer has value 43fe, thus I overwrote this 
+address with the value 43ee such that PC would execute my injected code from input.
 
 First Attempt: 30127f00b012324500000000000000043ee43
 
-The initial attempt failed and upon looking at memory I noticed that strcpy stopped at the first null byte encountered. So I decded to check it out.
+The initial attempt failed and upon looking at memory I noticed that strcpy stopped at the first null byte encountered. So I 
+decded to check it out.
 
 45dc:  0d4f           mov	r15, r13
 45de:  023c           jmp	#0x45e4 <strcpy+0x8>
@@ -43,13 +50,18 @@ The initial attempt failed and upon looking at memory I noticed that strcpy stop
 45ec:  f923           jnz	#0x45e0 <strcpy+0x4>
 45ee:  3041           ret
 
-The strcpy function will iterively copy each byte of user input into the new memory addresses starting at 43ee, the tst.b instruction determines if the encountered byte of my input is a null byte, if so the subroutine will return to login thus it is necessary to avoid using null bytes. In order to do this and take control of PC each byte of my input must not be a null byte.
+The strcpy function will iterively copy each byte of user input into the new memory addresses starting at 43ee, the tst.b 
+instruction determines if the encountered byte of my input is a null byte, if so the subroutine will return to login thus it is 
+necessary to avoid using null bytes. In order to do this and take control of PC each byte of my input must not be a null byte.
 
-To counter this I found a means of placing 0x7f into a register without using the hex itsel in my input thus I came up with the folowing input
+To counter this I found a means of placing 0x7f into a register without using the hex itsel in my input thus I came up with the 
+folowing input
 
 Final input:4141 3440 8001 3480 0101 0412 b012 4c45 f043
 
-The first two bytes are filler to guarantee that strcpy will copy the entirety of my input and store it in the second location at 0x43ee. Using Buffer Overflow like past levels the value 43f0 is passed into pc and everything between the final two bytes and the filler bytes is executed from memory directly.
+The first two bytes are filler to guarantee that strcpy will copy the entirety of my input and store it in the second location at 
+0x43ee. Using Buffer Overflow like past levels the value 43f0 is passed into pc and everything between the final two bytes and 
+the filler bytes is executed from memory directly.
 
 when disassembled you will see that 3440 8001 3480 0101 0412 b012 4c45 produces the following code 
 
@@ -58,6 +70,9 @@ when disassembled you will see that 3440 8001 3480 0101 0412 b012 4c45 produces 
 0412           push	r4
 b012 4c45      call	#0x454c 
 
-the mov and subtraction instructions in my shell code indirectly loads 0x7f into r4 without disrupting execution of the program or strcpy since the 0x7f is 0x7f00 when ini opcode which would stop the strcpy and prevent it from overwriting the stack with 43f0 and effectively pc would not have been changed. 0x454c is the location of the interrupt function and just prior 0x7f is pushed to the stack which unlocked the door completing the level.  
+the mov and subtraction instructions in my shell code indirectly loads 0x7f into r4 without disrupting execution of the program 
+or strcpy since the 0x7f is 0x7f00 when ini opcode which would stop the strcpy and prevent it from overwriting the stack with 
+43f0 and effectively pc would not have been changed. 0x454c is the location of the interrupt function and just prior 0x7f is 
+pushed to the stack which unlocked the door completing the level.  
 
 final input: 414134408001348001010412b0124c45f043 
