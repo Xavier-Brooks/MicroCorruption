@@ -29,7 +29,8 @@ similarities
 	With the exceptionof the create password function everything else occurs in the same order
 	granting access requires r15 value to be nonzero at line 4450 
 
-just like the previous level I decided to investigate the check password subroutine to see if the output had any effect on the value of r15 prior to the tst instruction and see if there were any hints that could lead to finding the necessary input.
+just like the previous level I decided to investigate the check password subroutine to see if the output had any effect on the 
+value of r15 prior to the tst instruction and see if there were any hints that could lead to finding the necessary input.
 
 448a <check_password>
 448a:  bf90 5365 0000 cmp	#0x6553, 0x0(r15)
@@ -45,8 +46,15 @@ just like the previous level I decided to investigate the check password subrout
 44ae:  0f4e           mov	r14, r15
 44b0:  3041           ret
 
-by moving the value 0x1 into r14 (line 44a2) and moving r14 into r15, the tst jump condition that will unlock the door is met. In order to do this however, the input hex saved at the memory address in r15 must match the hex value of the combined words in each of the compare statements throughout the check_password function. if any one byte is off then the jump statements will change the program counter to 44ac where r14 is leared copied to r15 and r15 is passed as a parameter to the tst function to fail the executionof the unlock in main.
+by moving the value 0x1 into r14 (line 44a2) and moving r14 into r15, the tst jump condition that will unlock the door is met. In 
+order to do this however, the input hex saved at the memory address in r15 must match the hex value of the combined words in each 
+of the compare statements throughout the check_password function. if any one byte is off then the jump statements will change the 
+program counter to 44ac where r14 is leared copied to r15 and r15 is passed as a parameter to the tst function to fail the 
+executionof the unlock in main.
 
-Be warned! Data loaded into memory is done so in the little endian format. bytes in each word of user input is loaded backwards into memory so, thus 0x1234 will appear as 3412 in memory. Since the bytes in the cmp statements of the check password subroutine are being compared directly to bytes in memory the user must type each word word in the compare statements backwards to complete the level.       
+Be warned! Data loaded into memory is done so in the little endian format. bytes in each word of user input is loaded backwards 
+into memory so, thus 0x1234 will appear as 3412 in memory. Since the bytes in the cmp statements of the check password subroutine 
+are being compared directly to bytes in memory the user must type each word word in the compare statements backwards to complete 
+the level.       
+
 Thus user input 5365462868564265 appears as 6553284656686542 which is compared word by word in the check password function.
-
