@@ -1,0 +1,48 @@
+similar to the third level this program seems to rely on the login subroutine as a wrapper for the main routine. Below is the newer rendition of the login function. 
+
+4500 <login>
+4500:  3150 f0ff      add	#0xfff0, sp
+4504:  3f40 7c44      mov	#0x447c "Enter the password to continue.", r15
+4508:  b012 a645      call	#0x45a6 <puts>
+450c:  3f40 9c44      mov	#0x449c "Remember: passwords are between 8 and 16 characters.", r15
+4510:  b012 a645      call	#0x45a6 <puts>
+4514:  3e40 3000      mov	#0x30, r14
+4518:  0f41           mov	sp, r15
+451a:  b012 9645      call	#0x4596 <getsn>
+451e:  0f41           mov	sp, r15
+4520:  b012 5244      call	#0x4452 <test_password_valid>
+4524:  0f93           tst	r15
+4526:  0524           jz	#0x4532 <login+0x32>
+4528:  b012 4644      call	#0x4446 <unlock_door>
+452c:  3f40 d144      mov	#0x44d1 "Access granted.", r15
+4530:  023c           jmp	#0x4536 <login+0x36>
+4532:  3f40 e144      mov	#0x44e1 "That password is not correct.", r15
+4536:  b012 a645      call	#0x45a6 <puts>
+453a:  3150 1000      add	#0x10, sp
+453e:  3041           ret
+
+This time around the program allows the user to type 48 characters(bytes) rather than 18 which could potentially lead to even more exploitations than buffer overflow. The final line before the return instruction adds 0x10 to the stack pointer which could also come into play, In addition the test_password functionis the exact same from the previous level. 
+
+4454 <test_password_valid>
+4454:  0412           push	r4
+4456:  0441           mov	sp, r4
+4458:  2453           incd	r4
+445a:  2183           decd	sp
+445c:  c443 fcff      mov.b	#0x0, -0x4(r4)
+4460:  3e40 fcff      mov	#0xfffc, r14
+4464:  0e54           add	r4, r14
+4466:  0e12           push	r14
+4468:  0f12           push	r15
+446a:  3012 7d00      push	#0x7d
+446e:  b012 7a45      call	#0x457a <INT>
+4472:  5f44 fcff      mov.b	-0x4(r4), r15
+4476:  8f11           sxt	r15
+4478:  3152           add	#0x8, sp
+447a:  3441           pop	r4
+447c:  3041           ret
+
+in fact the code above for test password will always pass zero into register 15, as a result the tst instruction in the login subroutine will always fail and send the program to the failure print statement and return to main providing further confusion. Upon rerunning the program with multiple test inputs, I noticed that the program counter receives the value at the top of the stack after execution of the return instruction. The lock manual validated this idea for me. 
+
+I also noticed that by the end of the login subroutine the stack pointer (SP) is always set to 43fe which is within the 48 byte offset of the base address for user input. because of this, I uused the buffer overflow to rewrite the value at address 43fe in order to have the program counter (PC) execute the pre-written code in the unlock door subroutine.
+
+my input 414141414141414141414141414141412845 corrupts the stack pointer prior to the retun instruction. Remembering little endianessbytes 2845 are loaded into PC as 4528 the address for the call to unlock door within login. 
