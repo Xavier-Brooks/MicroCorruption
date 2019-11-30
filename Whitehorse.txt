@@ -1,0 +1,52 @@
+The seventh level in the series saw a return to the infamous login functin which has become a staple in these programs, however new subroutines appear, which may add an extra level of security.
+
+44f4 <login>
+44f4:  3150 f0ff      add	#0xfff0, sp
+44f8:  3f40 7044      mov	#0x4470 "Enter the password to continue.", r15
+44fc:  b012 9645      call	#0x4596 <puts>
+4500:  3f40 9044      mov	#0x4490 "Remember: passwords are between 8 and 16 characters.", r15
+4504:  b012 9645      call	#0x4596 <puts>
+4508:  3e40 3000      mov	#0x30, r14
+450c:  0f41           mov	sp, r15
+450e:  b012 8645      call	#0x4586 <getsn>
+4512:  0f41           mov	sp, r15
+4514:  b012 4644      call	#0x4446 <conditional_unlock_door>
+4518:  0f93           tst	r15
+451a:  0324           jz	#0x4522 <login+0x2e>
+451c:  3f40 c544      mov	#0x44c5 "Access granted.", r15
+4520:  023c           jmp	#0x4526 <login+0x32>
+4522:  3f40 d544      mov	#0x44d5 "That password is not correct.", r15
+4526:  b012 9645      call	#0x4596 <puts>
+452a:  3150 1000      add	#0x10, sp
+452e:  3041           ret
+
+This iteration of the login not only removes the test_password function that did little to absolutely nothing, it also adds a newer function entitled "conditional unlock door", lastly it removes the call to unlock the door all around. Similar to previous levels the possibilty still remains that the value of PC can be rewrittne in order to execute code elsewhere in the program through buffer overflow or some other means. Below is the snippet of code for the conditional unlock door subroutine. By placing a breakpoint at the call to the subroutine I kept track of the fact that total allowed bytes from the user is once again 48 and that my input can be stored between 3016 and 3046 initially which may come in hady if some form of overflow is to be utilized in order to solve the mission.
+
+Below is code snippet for the conditional unlock door.
+
+4446 <conditional_unlock_door>
+4446:  0412           push	r4
+4448:  0441           mov	sp, r4
+444a:  2453           incd	r4
+444c:  2183           decd	sp
+444e:  c443 fcff      mov.b	#0x0, -0x4(r4)
+4452:  3e40 fcff      mov	#0xfffc, r14
+4456:  0e54           add	r4, r14
+4458:  0e12           push	r14
+445a:  0f12           push	r15
+445c:  3012 7e00      push	#0x7e
+4460:  b012 3245      call	#0x4532 <INT>
+4464:  5f44 fcff      mov.b	-0x4(r4), r15
+4468:  8f11           sxt	r15
+446a:  3152           add	#0x8, sp
+446c:  3441           pop	r4
+446e:  3041           ret
+
+Once again test password is present in our code just renamed to conditional unlock door for some reason. I decided to run the program up to the return statement in login to record the value of the SP which turned out to be 3028 and toook one step in the program to see if the program counter wold adopt the value at that address as I predicted, which it did. Knowing that It was possible to take control of the program counter andthe knowledge that it executes instructions at the memory address of it's value, I decided to use the Idea of shell code to overwrite the stack prior to the return with the base address of my password.
+
+using the assembler provided to us as a tool I typed in the instruction to push 7f to the stack which came out to be the opcode 3012 7f00. using this and the ability to overrite the stack with 3016, the stating address of my password, PC could jump to this address push the byte 7f in my password then make a call to the INT function in th eprogram to unlock the door where b012 3245 is the necessary words to call the interrupt.
+
+My final input: 30127f00b012324500000000000000004016 
+
+The word at the end of my input is used to overwrite the stack and the two words at the beginning are what is used to unlock the door.   
+
