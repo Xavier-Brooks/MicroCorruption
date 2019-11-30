@@ -1,4 +1,5 @@
-similar to the third level this program seems to rely on the login subroutine as a wrapper for the main routine. Below is the newer rendition of the login function. 
+similar to the third level this program seems to rely on the login subroutine as a wrapper for the main routine. 
+Below is the newer rendition of the login function. 
 
 4500 <login>
 4500:  3150 f0ff      add	#0xfff0, sp
@@ -21,7 +22,9 @@ similar to the third level this program seems to rely on the login subroutine as
 453a:  3150 1000      add	#0x10, sp
 453e:  3041           ret
 
-This time around the program allows the user to type 48 characters(bytes) rather than 18 which could potentially lead to even more exploitations than buffer overflow. The final line before the return instruction adds 0x10 to the stack pointer which could also come into play, In addition the test_password functionis the exact same from the previous level. 
+This time around the program allows the user to type 48 characters(bytes) rather than 18 which could potentially lead to even 
+more exploitations than buffer overflow. The final line before the return instruction adds 0x10 to the stack pointer which could 
+also come into play, In addition the test_password functionis the exact same from the previous level. 
 
 4454 <test_password_valid>
 4454:  0412           push	r4
@@ -41,8 +44,14 @@ This time around the program allows the user to type 48 characters(bytes) rather
 447a:  3441           pop	r4
 447c:  3041           ret
 
-in fact the code above for test password will always pass zero into register 15, as a result the tst instruction in the login subroutine will always fail and send the program to the failure print statement and return to main providing further confusion. Upon rerunning the program with multiple test inputs, I noticed that the program counter receives the value at the top of the stack after execution of the return instruction. The lock manual validated this idea for me. 
+in fact the code above for test password will always pass zero into register 15, as a result the tst instruction in the login 
+subroutine will always fail and send the program to the failure print statement and return to main providing further confusion. 
+Upon rerunning the program with multiple test inputs, I noticed that the program counter receives the value at the top of the 
+stack after execution of the return instruction. The lock manual validated this idea for me. 
 
-I also noticed that by the end of the login subroutine the stack pointer (SP) is always set to 43fe which is within the 48 byte offset of the base address for user input. because of this, I uused the buffer overflow to rewrite the value at address 43fe in order to have the program counter (PC) execute the pre-written code in the unlock door subroutine.
+I also noticed that by the end of the login subroutine the stack pointer (SP) is always set to 43fe which is within the 48 byte 
+offset of the base address for user input. because of this, I uused the buffer overflow to rewrite the value at address 43fe in 
+order to have the program counter (PC) execute the pre-written code in the unlock door subroutine.
 
-my input 414141414141414141414141414141412845 corrupts the stack pointer prior to the retun instruction. Remembering little endianessbytes 2845 are loaded into PC as 4528 the address for the call to unlock door within login. 
+my input 414141414141414141414141414141412845 corrupts the stack pointer prior to the retun instruction. Remembering little 
+endianess, bytes 2845 are loaded into PC as 4528 the address for the call to unlock door within login. 
