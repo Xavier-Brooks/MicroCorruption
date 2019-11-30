@@ -3,7 +3,6 @@ At this point I made it a habit of checking the contents of the main routine whe
 4438 <main>
 4438:  b012 2045      call	#0x4520 <login>
 443c:  0f43           clr	r15
-
 443e <__stop_progExec__>
 443e:  32d0 f000      bis	#0xf0, sr
 4442:  fd3f           jmp	#0x443e <__stop_progExec__+0x0>
@@ -39,7 +38,7 @@ checking login was the only course of action to be taken.
 
 unlike the main of the previous two levels, login acts as a wrapper function that handles the program for the most part. In addition, two return instructions occur in this subroutine, one that unlocks the door as we desire prior to the return to main, and another that denies us access before retuning to main. Since main doesn't call upon any other subroutines or perform any instruction itself the program counter would simply fall through to the _stop_progExec_ subroutine and stop the cpu unless I found the correct input.
 
-In order to avoid this return case, the comp.b statement tell us that the value at address 0x2410 must be 0xf2. The string printed at the beginning of the login subroutine also tells us that my input must be between 8 and 16 characters(or 8 to 16 bytes), however, as I would discover this is just a distraction and after a few minutes of observation I realized the code provided states otherwise. 
+In order to avoid this return case, the comp.b statement tell us that the value at address 0x2410 must be 0xf2(the hex ascii for "c"). The string printed at the beginning of the login subroutine also tells us that my input must be between 8 and 16 characters(or 8 to 16 bytes), however, as I would discover this is just a distraction and after a few minutes of observation I realized the code provided states otherwise. 
     
 45ce <getsn>
 45ce:  0e12           push	r14
@@ -49,9 +48,7 @@ In order to avoid this return case, the comp.b statement tell us that the value 
 45d8:  3150 0600      add	#0x6, sp
 45dc:  3041           ret
 
-The getsn subroutine utilizes the 0x2 interrupt shown in the lock manual on the website, the value currently at the top of the stack during this call is the base address for user input and the second value on the stack is the amount of bytes The user may type for the program to read. since the stack follows a LIFO (Last in First out) structure the amouont of bytes to read must be pushed on the stack first and the base address second. prior to calling getsn r14=0x1c (28 in decimal) and r15=0x2400 the address to store the user input. Thus I was actually allowed a total of 28 characters contrary to what the string told me. since the address 2410 needed to hold 0xf2 the 17th byte of my input needed to be f2 since the address 2400 is included in holding input bytes.
+The getsn subroutine utilizes the 0x2 interrupt shown in the lock manual on the website, the value currently at the top of the stack during this call is the base address for user input and the second value on the stack is the amount of bytes The user may type for the program to read. since the stack follows a LIFO (Last in First out) structure the amouont of bytes to read must be pushed on the stack first and the base address second. prior to calling getsn r14=0x1c (28 in decimal) and r15=0x2400 the address to store the user input. Thus I was actually allowed a total of 28 characters contrary to what the string told me. Thus the 17th byte of my input needed to be f2("c") since the address 2400 is included in holding input bytes.
 
-I decided to test 0x11111111111111111111111111111111f2 which should be able to pass the comp.b statement since my 17th byte is 0xf2, unless the test_password subroutine has an impact on my input or the execution of the program overall that I have not witnessed.
-
-After trying this input I was notified that the password I typed was acceptable, hoever later on I should be careful of the possible effects test_password could have on code execution. By placing "0x1c" into r14 more input is successful from the user than necessary which enabled me to bypass the lock.  
+I decided to test "AAAAAAAAAAAAAAAAc" which should be able to pass the comp.b statement proving that test_password was just a subroutine present to scare users away from the general solution, however later on I should be careful of the possible effects test_password could have on code execution. By placing "0x1c" into r14 more input is accepted from the user than necessary which enabled me to bypass the lock, a simple case of buffer overflow.  
 
