@@ -3,7 +3,6 @@ At this point I made it a habit of checking the contents of the main routine whe
 4438 <main>
 4438:  b012 2045      call	#0x4520 <login>
 443c:  0f43           clr	r15
-
 443e <__stop_progExec__>
 443e:  32d0 f000      bis	#0xf0, sr
 4442:  fd3f           jmp	#0x443e <__stop_progExec__+0x0>
