@@ -1,4 +1,5 @@
-This level was very interesting when I first opened it up. Unlike the last three, the login subroutine was removed and the program went back to using main as the primary routine being executed. 
+This level was very interesting when I first opened it up. Unlike the last three, the login subroutine was removed and the 
+program went back to using main as the primary routine being executed. 
 
 4438 <main>
 4438:  3e40 2045      mov	#0x4520, r14
@@ -9,11 +10,17 @@ This level was very interesting when I first opened it up. Unlike the last three
 444a:  b012 0024      call	#0x2400
 444e:  0f43           clr	r15
 
-Upon starting this level I noticed with the exception of the two calls being made in main nothing else was really happening. I checked out the enc function alone and notied that it consisted of loops, nested loops, and compare statements all of which would take to long to actually decipher and decided to check out what truly caught my interest the call to the instruction at 02400.
+Upon starting this level I noticed with the exception of the two calls being made in main nothing else was really happening. I 
+checked out the enc function alone and notied that it consisted of loops, nested loops, and compare statements all of which would 
+take to long to actually decipher and decided to check out what truly caught my interest the call to the instruction at 02400.
 
-By placing a breakpoint at this call and stepping through I noticed that the program counter was moving through memory starting at 0x2400 all while modifying the stack and status of registers. At this point I realized the program was executing encoded instructions from memory not from the disassembly.
+By placing a breakpoint at this call and stepping through I noticed that the program counter was moving through memory starting 
+at 0x2400 all while modifying the stack and status of registers. At this point I realized the program was executing encoded 
+instructions from memory not from the disassembly.
 
-One could step through the function and use the current instruction window to write out the subroutine being executed however if compare statements are embedded in memory there was always the possiblity of missing key instruction that could be used to disassemble the memory instructions so I copied much of the words in memory and used the online assembler to decipher the code.
+One could step through the function and use the current instruction window to write out the subroutine being executed however if 
+compare statements are embedded in memory there was always the possiblity of missing key instruction that could be used to 
+disassemble the memory instructions so I copied much of the words in memory and used the online assembler to decipher the code.
 
 Upon disassembly of the opcodes from memory the following subroutine for the call to 2400 was produced.
 
@@ -30,7 +37,8 @@ Upon disassembly of the opcodes from memory the following subroutine for the cal
 0312           push	#0x0
 b012 6424      call	#0x2464
 
-By performing multiple steps through the code above I noticed that the code above was simply printing the mesage in I/O console asking for the correct password. 
+By performing multiple steps through the code above I noticed that the code above was simply printing the mesage in I/O console 
+asking for the correct password. 
 
 2152           add	#0x4, sp
 6f4b           mov.b	@r11, r15
@@ -48,14 +56,17 @@ b012 6424      call	#0x2464
 b012 6424      call	#0x2464
 3150 0600      add	#0x6, sp
 
-Further steps through the subroutine proved to me that the interrupt call above simply retrieves user input from the user. With this knowledge and the use of the lock manual I found that pushing the byte 0x7f to the stack prior to calling the hidden INT function will unlock the door.    
+Further steps through the subroutine proved to me that the interrupt call above simply retrieves user input from the user. With 
+this knowledge and the use of the lock manual I found that pushing the byte 0x7f to the stack prior to calling the hidden INT 
+function will unlock the door.    
 
 b490 b67b dcff cmp	#0x7bb6, -0x24(r4)
 0520           jnz	$+0xc
 3012 7f00      push	#0x7f
 b012 6424      call	#0x2464
 
-In order to unlock the door I noticed that the compare statement above must be satisfied where the word at address r4-36 must be 7bb6 in order for PC to hit the unlock door call.
+In order to unlock the door I noticed that the compare statement above must be satisfied where the word at address r4-36 must be 
+7bb6 in order for PC to hit the unlock door call.
 
 2153           incd	sp
 3150 2000      add	#0x20, sp
@@ -71,4 +82,6 @@ In order to unlock the door I noticed that the compare statement above must be s
 b012 1000      call	#0x10
 3241           pop	sr
 
-The address holding the value being compared just so happens to be 0x43da the same address that my input was held. remembering little endianess, by typing b67b as my input the pc skipped over  the jnz instruction fell through to the push 7f statement and unlocked the door granting me access. 
+The address holding the value being compared just so happens to be 0x43da the same address that my input was held. remembering 
+little endianess, by typing b67b as my input the pc skipped over  the jnz instruction fell through to the push 7f statement and 
+unlocked the door granting me access. 
